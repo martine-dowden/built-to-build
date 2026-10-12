@@ -12,14 +12,14 @@ function getAdmin(program: Command): typeof admin {
   const config: Record<Env, EnvConfig> = {
     local: {
       // TODO: update to match your project. Information can be found in your firebase console
-      projectId: '<PROJECT_ID>',
+      projectId: 'starter-cf115',
     },
     prod: {
       // TODO: update to match your project. Information can be found in your firebase console
-      projectId: '<PROJECT_ID>',
+      projectId: 'starter-cf115',
       credential: admin.cert(serviceAccount as ServiceAccount),
-      databaseURL: 'https://<PROJECT_ID>.firebaseio.com',
-      storageBucket: '<PROJECT_ID>.appspot.com',
+      databaseURL: 'https://starter-cf115.firebaseio.com',
+      storageBucket: 'starter-cf115.appspot.com',
     },
   }
   const env = program.getOptionValue('env') as Env
