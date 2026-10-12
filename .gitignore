@@ -1,0 +1,9 @@
+node_modules
+.DS_Store
+dist
+**/*temp.txt
+.vitest/
+*.tsbuildinfo
+*service-account.json
+.firebaserc
+*-debug.log
