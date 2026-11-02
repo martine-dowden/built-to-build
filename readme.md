@@ -50,7 +50,7 @@ Only needed for the `save-cat-fact` command.
 | -h, --help | Display help for command | | | false |
 | -v, --version | Current Version |  |  | false
 | --ci | Indicates the script is being used within automation | false |  | false
-| -c, --commit | Unless set, will perform as dry-run |  |  | false
+| -c, --commit | Persist changes (defaults to dry-run) |  |  | false
 | -e, --env <env> | Environment | local | local,prod | true
 
 ### Commands
