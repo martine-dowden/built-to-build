@@ -12,7 +12,6 @@
     "enabled": true,
     "indentStyle": "space",
     "indentWidth": 2,
-    "lineWidth": null,
     "expand": "auto"
   },
   "linter": {

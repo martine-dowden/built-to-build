@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { text } from 'node:stream/consumers'
 import { Command, Option } from 'commander'
 import packageJSON from '../package.json' with { type: 'json' }
 import * as scripts from './scripts/index.js'
@@ -16,10 +17,10 @@ program.version(packageJSON.version, '-v, --version', 'Current Version')
 program.addOption(
   new Option('--ci', 'Indicates the script is being used within automation')
     .env('CI')
-    .default(false),
+    .default(!process.stdout.isTTY),
 )
 program.addOption(
-  new Option('-c, --commit', 'Unless set, will perform as dry-run'),
+  new Option('-c, --commit', 'Persist changes (defaults to dry-run)'),
 )
 program.addOption(
   new Option('-e, --env <env>', 'Environment')
@@ -30,11 +31,14 @@ program.addOption(
 
 program.hook('preAction', () => {
   const dryRun = !program.getOptionValue('commit')
-  if (dryRun) {
+  const ci = program.getOptionValue('ci')
+  if (dryRun && !ci) {
     log('info', 'Dry Run: changes will NOT be saved to the database')
   }
-  const env = program.getOptionValue('env')
-  log('info', `Current ENV = ${env}`)
+  if (!ci) {
+    const env = program.getOptionValue('env')
+    log('info', `Current ENV = ${env}`)
+  }
 
   //  Global error handler
   process.on('uncaughtException', (error) => {
@@ -56,7 +60,7 @@ program.hook('preAction', () => {
 program
   .command('cat-fact')
   .description('returns a random cat fact')
-  .action(async () => await scripts.getCatFact())
+  .action(async () => await scripts.getCatFact(program.opts()))
 
 program
   .command('docs')
@@ -67,13 +71,29 @@ program
   .command('hello')
   .description('My first script')
   .argument('[fact]', 'A random fact to display after the hello world')
-  .action((fact) => scripts.helloWorld(fact))
+  .action(async (fact) => {
+    const stdinText = !process.stdin.isTTY
+      ? (await text(process.stdin)).trim()
+      : ''
+    const _fact = fact || stdinText
+    scripts.helloWorld(_fact)
+  })
 
 program
   .command('save-cat-fact')
   .description('Save cat fact to firebase collection')
   .argument('[fact]', 'Cat fact')
-  .action(async (fact) => await scripts.saveCatFact({ catFact: fact, program }))
+  .action(async (fact, commandOptions) => {
+    const programOptions: ProgramOptions = program.opts()
+    const stdinText = !process.stdin.isTTY
+      ? (await text(process.stdin)).trim()
+      : ''
+    await scripts.saveCatFact({
+      ...commandOptions,
+      ...programOptions,
+      fact: fact || stdinText,
+    })
+  })
 
 program
   .command('test-colors')
@@ -83,7 +103,7 @@ program
 program
   .command('test-spinner')
   .description('Demo spinner on a 3 second timeout')
-  .action(() => scripts.testSpinner())
+  .action(() => scripts.testSpinner(program.opts()))
 
 program
   .command('who-are-you')
@@ -94,7 +114,7 @@ program
   //  pass the program and command option values to the function
   .action((commandOptions) => {
     const programOptions: ProgramOptions = program.opts()
-    scripts.whoAreYou({ commandOptions, programOptions })
+    scripts.whoAreYou({ ...programOptions, ...commandOptions })
   })
 
 // Keep parse as last

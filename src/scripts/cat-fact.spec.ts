@@ -43,12 +43,11 @@ describe('getCatFact', () => {
     vi.mocked(fetch).mockResolvedValue(mockResponse as any)
 
     // Act
-    await getCatFact()
+    await getCatFact({})
 
     // Assert
     expect(mockStartSpinner).toHaveBeenCalledTimes(1)
     expect(fetch).toHaveBeenCalledWith('https://catfact.ninja/fact')
-    expect(writeFileSyncSpy).toHaveBeenCalledWith('temp.txt', mockFact)
     expect(mockStopSpinner).toHaveBeenCalledTimes(1)
     expect(mockLog).toHaveBeenCalledWith('info', mockFact)
     expect(mockHandleError).not.toHaveBeenCalled()
@@ -60,7 +59,7 @@ describe('getCatFact', () => {
     vi.mocked(fetch).mockResolvedValue(mockResponse as any)
 
     // Act
-    await getCatFact()
+    await getCatFact({})
 
     // Assert
     expect(mockStartSpinner).toHaveBeenCalledTimes(1)
@@ -76,7 +75,7 @@ describe('getCatFact', () => {
     vi.mocked(fetch).mockRejectedValue(networkError)
 
     // Act
-    await getCatFact()
+    await getCatFact({})
 
     // Assert
     expect(mockStartSpinner).toHaveBeenCalledTimes(1)

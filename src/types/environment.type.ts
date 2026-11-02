@@ -1,6 +1,8 @@
 import type { Credential } from 'firebase-admin'
+import z from 'zod'
 
-export type Env = 'local' | 'prod'
+export const Environments = z.literal(['local', 'prod'])
+export type Env = z.infer<typeof Environments>
 
 export type EnvConfig = {
   /** Needed for running in emulators */

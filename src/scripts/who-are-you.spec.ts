@@ -23,17 +23,15 @@ describe('whoAreYou()', () => {
   describe('Options Validation', () => {
     it('should fail validation and set exit code 9 if a command option exceeds 20 characters', async () => {
       const options = {
-        programOptions: { ci: false },
-        commandOptions: {
-          firstName: 'ThisNameIsWayTooLongForThisValidationRule',
-        },
+        ci: false,
+        firstName: 'ThisNameIsWayTooLongForThisValidationRule',
+        lastName: '',
       }
-
       await whoAreYou(options)
 
       expect(log).toHaveBeenCalledWith(
         'error',
-        'invalid option firstName: Name is too long, should be less <= 20 characters',
+        'firstName: Too big: expected string to have <=20 characters',
       )
       expect(process.exitCode).toBe(9)
       expect(input).not.toHaveBeenCalled()
@@ -43,16 +41,17 @@ describe('whoAreYou()', () => {
   // --- Group 2: CI Mode Restrictions ---
   describe('CI Mode Behavior', () => {
     it('should exit with code 9 if running in CI mode without options', async () => {
-      const options: WhoAreYouOptions = {
-        programOptions: { ci: true },
-        commandOptions: {},
-      }
+      const options: WhoAreYouOptions = { ci: true } as any
 
       await whoAreYou(options)
 
       expect(log).toHaveBeenCalledWith(
         'error',
-        'Please provide a first and last name',
+        expect.stringContaining('firstName'),
+      )
+      expect(log).toHaveBeenCalledWith(
+        'error',
+        expect.stringContaining('lastName'),
       )
       expect(process.exitCode).toBe(9)
     })
@@ -61,7 +60,7 @@ describe('whoAreYou()', () => {
   // --- Group 3: Prompting / Fallbacks (Non-CI) ---
   describe('Interactive Prompts & Fallbacks', () => {
     it('should prompt for both values if no command options are given, then log success', async () => {
-      const options = { programOptions: { ci: false }, commandOptions: {} }
+      const options = { ci: false } as any
 
       // Mock sequential CLI user entries
       vi.mocked(input)
@@ -76,10 +75,7 @@ describe('whoAreYou()', () => {
     })
 
     it('should skip prompt for first name if it is provided as a valid command option', async () => {
-      const options = {
-        programOptions: { ci: false },
-        commandOptions: { firstName: 'Jane' },
-      }
+      const options = { ci: false, firstName: 'Jane' } as any
 
       vi.mocked(input).mockResolvedValueOnce('Doe') // Resolves the last name prompt
 
@@ -97,20 +93,20 @@ describe('whoAreYou()', () => {
   // --- Group 4: Inline Internal Validator Verification ---
   describe('Internal Input Config Validation', () => {
     it('should evaluate the input validator configuration correctly', async () => {
-      const options = { programOptions: { ci: false }, commandOptions: {} }
+      const options = { ci: false } as any
 
       await whoAreYou(options)
 
       // Snatch the config payload passed directly into the first prompt
       const inputConfigPassed = vi.mocked(input).mock.calls?.[0]?.[0]
-
+      console.log(inputConfigPassed)
       expect(inputConfigPassed?.required).toBe(true)
       expect(inputConfigPassed?.validate?.('ShortName')).toBe(true)
       expect(
         inputConfigPassed?.validate?.(
           'ThisNameIsWayTooLongForThisValidationRule',
         ),
-      ).toBe('Name is too long, should be less <= 20 characters')
+      ).toBe('Max length is 20 characters')
     })
   })
 })

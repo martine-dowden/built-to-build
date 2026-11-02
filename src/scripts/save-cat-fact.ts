@@ -1,40 +1,35 @@
-import type { Command } from 'commander'
+import z from 'zod'
 import { getDB } from '../services/firebase-admin.js'
 import { handleError, log } from '../services/utilities.js'
+import { Environments } from '../types/environment.type.js'
+
+const SaveCatFactSchema = z.object({
+  ci: z.boolean().default(false),
+  commit: z.boolean().default(false),
+  fact: z.string().min(1).max(5000),
+  env: Environments,
+})
+export type SaveCatFactOptions = z.infer<typeof SaveCatFactSchema>
 
 /** Saves a provided cat fact to firebase/firestore */
-export async function saveCatFact({
-  catFact,
-  program,
-}: {
-  catFact: string
-  program: Command
-}) {
-  /** validate my catFact */
-  if (!catFact) {
-    log('error', 'Please provide a cat fact')
-    process.exitCode = 7
+export async function saveCatFact(rawOptions: SaveCatFactOptions) {
+  const result = SaveCatFactSchema.safeParse(rawOptions)
+  if (!result.success) {
+    const e = result.error.issues[0]
+    log('error', `${e?.path}: ${e?.message}`)
+    process.exitCode = 9
     return
   }
-  if (typeof catFact !== 'string') {
-    log('error', 'Cat fact must be a string')
-    process.exitCode = 7
-    return
-  }
-  if (catFact.length > 5000) {
-    log('error', 'Cat fact must shorter than 5000 characters')
-    process.exitCode = 7
-    return
-  }
+  const { fact, commit, env } = result.data
 
   /** Save my fact to the DB */
   try {
-    const db = getDB(program)
-    if (program.getOptionValue('commit')) {
-      const ref = await db.collection('/catFacts').add({ fact: catFact })
-      log('success', `cat fact added with id ${ref.id}`)
+    const db = getDB(env)
+    if (commit) {
+      const ref = await db.collection('/catFacts').add({ fact })
+      log('success', ref.id)
     } else {
-      log('info', `the following fact would have been saved: ${catFact}`)
+      log('log', `[DRY RUN] Would save fact: ${fact}`)
     }
   } catch (err: any) {
     handleError(err)

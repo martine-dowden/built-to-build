@@ -1,4 +1,3 @@
-import type { Command } from 'commander'
 import admin, { type ServiceAccount } from 'firebase-admin'
 import { type Firestore, getFirestore } from 'firebase-admin/firestore'
 import serviceAccount from '../../service-account.json' with { type: 'json' }
@@ -7,7 +6,7 @@ import type { Env, EnvConfig } from '../types/environment.type.js'
 var _admin: typeof admin
 
 /** initialize firebase */
-function getAdmin(program: Command): typeof admin {
+function getAdmin(env: Env): typeof admin {
   if (_admin) return _admin
   const config: Record<Env, EnvConfig> = {
     local: {
@@ -22,7 +21,6 @@ function getAdmin(program: Command): typeof admin {
       storageBucket: '<PROJECT_ID>.appspot.com',
     },
   }
-  const env = program.getOptionValue('env') as Env
   if (!env) throw new Error(`Environment not found: env = ${env}`)
   admin.initializeApp(config[env])
   _admin = admin
@@ -30,7 +28,7 @@ function getAdmin(program: Command): typeof admin {
 }
 
 /** get the firestore instance */
-export function getDB(program: Command): Firestore {
-  if (!_admin) getAdmin(program)
+export function getDB(env: Env): Firestore {
+  if (!_admin) getAdmin(env)
   return getFirestore()
 }

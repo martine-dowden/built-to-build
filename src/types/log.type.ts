@@ -1,4 +1,4 @@
-import type { Color } from 'colors'
+import type { InspectColor } from 'node:util'
 
 export type LogType =
   | 'debug'
@@ -15,7 +15,7 @@ export type LogTypeDetails = {
   icon: string
   label: string
   level: number
-  color: Color
+  color: InspectColor
   console:
     | typeof console.debug
     | typeof console.log
